@@ -41,6 +41,14 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m) {
 /// -^-^- ベクトル演算 -^-^- ///
 
 // 加算
+Vector2 Add(const Vector2& v1, const Vector2& v2) {
+	Vector2 result;
+
+	result.x = v1.x + v2.x;
+	result.y = v1.y + v2.y;
+
+	return result;
+}
 Vector3 Add(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
 
@@ -52,6 +60,14 @@ Vector3 Add(const Vector3& v1, const Vector3& v2) {
 };
 
 // 減算
+Vector2 Subtract(const Vector2& v1, const Vector2& v2) {
+	Vector2 result;
+
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+
+	return result;
+}
 Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
 
@@ -63,6 +79,14 @@ Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 };
 
 // スカラー倍
+Vector2 Multiply(float scalar, const Vector2& v) {
+	Vector2 result;
+
+	result.x = v.x * scalar;
+	result.y = v.y * scalar;
+
+	return result;
+}
 Vector3 Multiply(float scalar, const Vector3& v) {
 	Vector3 result;
 
@@ -72,6 +96,7 @@ Vector3 Multiply(float scalar, const Vector3& v) {
 
 	return result;
 };
+
 
 // 内積
 float Dot(const Vector3& v1, const Vector3& v2) { return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z); };
@@ -354,6 +379,33 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
 	return result;
 };
 
+
+/// -^-^- 演算子オーバーロード -^-^- ///
+// Vector2
+// 二項演算子
+Vector2 operator+(const Vector2& v1, const Vector2& v2) { return Add(v1, v2); }
+Vector2 operator-(const Vector2& v1, const Vector2& v2) { return Subtract(v1, v2); }
+Vector2 operator*(float s, const Vector2& v) { return Multiply(s, v); }
+Vector2 operator*(const Vector2& v, float s) { return s * v; }
+Vector2 operator/(const Vector2& v, float s) { return Multiply(1.0f / s, v); }
+// 単項演算子
+Vector2 operator+(const Vector2& v) { return v; }
+Vector2 operator-(const Vector2& v) { return { -v.x,-v.y }; }
+
+// Vector3
+// 二項演算子
+Vector3 operator+(const Vector3& v1, const Vector3& v2) { return Add(v1, v2); }
+Vector3 operator-(const Vector3& v1, const Vector3& v2) { return Subtract(v1, v2); }
+Vector3 operator*(float s, const Vector3& v) { return Multiply(s, v); }
+Vector3 operator*(const Vector3& v, float s) { return s * v; }
+Vector3 operator/(const Vector3& v, float s) { return Multiply(1.0f / s, v); }
+// 単項演算子
+Vector3 operator+(const Vector3& v) { return v; }
+Vector3 operator-(const Vector3& v) { return { -v.x,-v.y,-v.z }; }
+
+
+/// -^-^- 描画 -^-^- ///
+
 // グリッド描画
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	const float kGridHalfWidth = 2.0f;
@@ -394,11 +446,13 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 	}
 }
 
-
-/// -^-^- 描画 -^-^- ///
-
 // 球描画
 void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+
+
+	Matrix4x4 worldMatrix = MakeAffineMatrix({ 1,1,1 }, { 0,0,0 }, sphere.center);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+
 	const uint32_t kSubdivision = 10; // 分割数
 	const float kLonEvery = (2.0f * (float)M_PI) / kSubdivision; // 経度分割1つ分の角度
 	const float kLatEvery = (float)M_PI / kSubdivision; // 緯度分割1つ分の角度
@@ -418,14 +472,10 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 			c = { sphere.radius * cosf(lat) * cosf(lon + kLonEvery), sphere.radius * sinf(lat), sphere.radius * cosf(lat) * sin(lon + kLonEvery) };
 
 			// a,b,cをScreen座標系まで変換
-			Vector3 ndcVertex = Transform(a, viewProjectionMatrix);
-			a = Transform(ndcVertex, viewportMatrix);
+			a = Transform(Transform(a, worldViewProjectionMatrix), viewportMatrix);
+			b = Transform(Transform(b, worldViewProjectionMatrix), viewportMatrix);
+			c = Transform(Transform(c, worldViewProjectionMatrix), viewportMatrix);
 
-			ndcVertex = Transform(b, viewProjectionMatrix);
-			b = Transform(ndcVertex, viewportMatrix);
-
-			ndcVertex = Transform(c, viewProjectionMatrix);
-			c = Transform(ndcVertex, viewportMatrix);
 
 			// ab,bcで線を引く
 			Novice::DrawLine((int)a.x, (int)a.y, (int)b.x, (int)b.y, color);
@@ -522,7 +572,7 @@ void DrawOBB(const OBB& obb, const Matrix4x4& viewProjectionMatrix, const Matrix
 			{ { obb.center.x }, { obb.center.y }, { obb.center.z }, { 1 } },
 		},
 	};
-	
+
 	Vector3 points[8];
 	points[0] = { -obb.size.x, -obb.size.y, -obb.size.z };
 	points[1] = { -obb.size.x, -obb.size.y, obb.size.z };

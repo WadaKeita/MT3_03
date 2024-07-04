@@ -1,6 +1,7 @@
 #pragma once
 #define _USE_MATH_DEFINES
 #include "math.h"
+#include "Vector2.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
 #include "cmath"
@@ -80,13 +81,17 @@ struct OBB {
 // ベクトル変換
 Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
 
+
 // 加算
+Vector2 Add(const Vector2& v1, const Vector2& v2);
 Vector3 Add(const Vector3& v1, const Vector3& v2);
 
 // 減算
+Vector2 Subtract(const Vector2& v1, const Vector2& v2);
 Vector3 Subtract(const Vector3& v1, const Vector3& v2);
 
 // スカラー倍
+Vector2 Multiply(float scalar, const Vector2& v);
 Vector3 Multiply(float scalar, const Vector3& v);
 
 // 内積
@@ -136,6 +141,32 @@ Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 
 // 逆行列
 Matrix4x4 Inverse(const Matrix4x4& m);
+
+
+/// 演算子オーバーロード
+
+// Vector2
+// 二項演算子
+Vector2 operator+(const Vector2& v1, const Vector2& v2);
+Vector2 operator-(const Vector2& v1, const Vector2& v2);
+Vector2 operator*(float s, const Vector2& v);
+Vector2 operator*(const Vector2& v, float s);
+Vector2 operator/(const Vector2& v, float s);
+// 単項演算子
+Vector2 operator+(const Vector2& v);
+Vector2 operator-(const Vector2& v);
+
+// Vector3
+// 二項演算子
+Vector3 operator+(const Vector3& v1, const Vector3& v2);
+Vector3 operator-(const Vector3& v1, const Vector3& v2);
+Vector3 operator*(float s, const Vector3& v);
+Vector3 operator*(const Vector3& v, float s);
+Vector3 operator/(const Vector3& v, float s);
+// 単項演算子
+Vector3 operator+(const Vector3& v);
+Vector3 operator-(const Vector3& v);
+
 
 /// <summary>
 /// グリッド描画
