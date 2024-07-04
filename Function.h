@@ -82,6 +82,8 @@ struct OBB {
 Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
 
 
+Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t);
+
 // 加算
 Vector2 Add(const Vector2& v1, const Vector2& v2);
 Vector3 Add(const Vector3& v1, const Vector3& v2);
@@ -142,6 +144,7 @@ Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 // 逆行列
 Matrix4x4 Inverse(const Matrix4x4& m);
 
+Vector3 GetWorldPosition(const Matrix4x4& matrix);
 
 /// 演算子オーバーロード
 
@@ -227,6 +230,11 @@ void DrawRay(const Ray& ray, const Matrix4x4& viewProjectionMatrix, const Matrix
 /// </summary>
 void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color);
 
+/// <summary>
+/// ベジェ曲線描画
+/// </summary>
+void DrawBezier(const Vector3& controlPoint0, const Vector3& controlPoint1, const Vector3& controlPoint2,
+	const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color);
 
 /// <summary>
 /// 衝突判定：球と球

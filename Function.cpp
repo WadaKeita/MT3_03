@@ -38,6 +38,17 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m) {
 	return result;
 }
 
+Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t) {
+	Vector3 result;
+
+	result.x = (1.0f - t) * v1.x + t * v2.x;
+	result.y = (1.0f - t) * v1.y + t * v2.y;
+	result.z = (1.0f - t) * v1.z + t * v2.z;
+
+	return result;
+}
+
+
 /// -^-^- ベクトル演算 -^-^- ///
 
 // 加算
@@ -357,6 +368,18 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
 	return result;
 };
 
+Vector3 GetWorldPosition(const Matrix4x4& matrix) {
+
+	// ワールド座標を入れる変数
+	Vector3 worldPos;
+	// ワールド行列の並行移動成分を取得（ワールド座標）
+	worldPos.x = matrix.m[3][0];
+	worldPos.y = matrix.m[3][1];
+	worldPos.z = matrix.m[3][2];
+
+	return worldPos;
+}
+
 // 正射影ベクトル
 Vector3 Project(const Vector3& v1, const Vector3& v2) {
 	Vector3 result{};
@@ -636,6 +659,30 @@ void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, 
 	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
 }
 
+// ベジェ曲線描画
+void DrawBezier(const Vector3& controlPoint0, const Vector3& controlPoint1, const Vector3& controlPoint2,
+	const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+
+	Vector3 point[11];
+
+	float t = 0;
+	for (int i = 0; i < 11; i++) {
+		Vector3 p0p1 = Lerp(controlPoint0, controlPoint1, t);
+		Vector3 p1p2 = Lerp(controlPoint1, controlPoint2, t);
+
+		point[i] = Lerp(p0p1, p1p2, t);
+
+		point[i] = Transform(Transform(point[i], viewProjectionMatrix), viewportMatrix);
+
+		t += 0.1f;
+	}
+
+	// 描画
+	for (int i = 0; i < 10; i++) {
+		Novice::DrawLine(int(point[i].x), int(point[i].y), int(point[int(i + 1)].x), int(point[int(i + 1)].y), color);
+	}
+
+}
 
 /// -^-^- 衝突判定 -^-^- ///
 

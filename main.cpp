@@ -7,40 +7,6 @@
 const char kWindowTitle[] = "LD2A_02_ワダ_ケイタ";
 
 
-Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t) {
-	Vector3 result;
-
-	result.x = (1.0f - t) * v1.x + t * v2.x;
-	result.y = (1.0f - t) * v1.y + t * v2.y;
-	result.z = (1.0f - t) * v1.z + t * v2.z;
-
-	return result;
-}
-
-void DrawBezier(const Vector3& controlPoint0, const Vector3& controlPoint1, const Vector3& controlPoint2,
-	const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
-
-	Vector3 point[11];
-
-	float t = 0;
-	for (int i = 0; i < 11; i++) {
-		Vector3 p0p1 = Lerp(controlPoint0, controlPoint1, t);
-		Vector3 p1p2 = Lerp(controlPoint1, controlPoint2, t);
-
-		point[i] = Lerp(p0p1, p1p2, t);
-
-		point[i] = Transform(Transform(point[i], viewProjectionMatrix), viewportMatrix);
-
-		t += 0.1f;
-	}
-
-	// 描画
-	for (int i = 0; i < 10; i++) {
-		Novice::DrawLine(int(point[i].x), int(point[i].y), int(point[int(i + 1)].x), int(point[int(i + 1)].y), color);
-	}
-
-}
-
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -63,15 +29,38 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		0.01f,
 	};
 
-	// ベジェ曲線コントロールポイント
-	Vector3 controlPoint[3] = {
-		{-0.0f, 0.58f, 1.0f },
-		{1.76f, 1.0f, -0.3f },
-		{0.94f, -0.7f, 2.3f },
+
+	Vector3 translates[3] = {
+		{0.2f, 1.0f, 0.0f},
+		{0.4f, 0.0f, 0.0f},
+		{0.3f, 0.0f, 0.0f},
 	};
-	unsigned int bezierColor = 0xFFFFFFFF;
+	Vector3 rotates[3] = {
+		{0.0f, 0.0f, -6.8f},
+		{0.0f, 0.0f, -1.4f},
+		{0.0f, 0.0f, 0.0f},
+	};
+	Vector3 scales[3] = {
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+	};
+
 
 	Sphere sphere[3];
+	sphere[0].radius = 0.1f;
+	sphere[1].radius = 0.1f;
+	sphere[2].radius = 0.1f;
+
+	sphere[0].center = { 0,0,0 };
+	sphere[1].center = { 0,0,0 };
+	sphere[2].center = { 0,0,0 };
+
+	unsigned int sphere_color[3];
+	sphere_color[0] = RED;
+	sphere_color[1] = GREEN;
+	sphere_color[2] = BLUE;
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -88,9 +77,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		CameraOperation(camera, keys);
 
-		sphere[0] = { controlPoint[0],0.01f };
-		sphere[1] = { controlPoint[1],0.01f };
-		sphere[2] = { controlPoint[2],0.01f };
+		Matrix4x4 localMatrix[3];
+		localMatrix[0] = MakeAffineMatrix(scales[0], rotates[0], translates[0]);
+		localMatrix[1] = MakeAffineMatrix(scales[1], rotates[1], translates[1]);
+		localMatrix[2] = MakeAffineMatrix(scales[2], rotates[2], translates[2]);
+
+		Matrix4x4 worldMatrix[3];
+		worldMatrix[0] = localMatrix[0];
+		worldMatrix[1] = Multiply(localMatrix[1], worldMatrix[0]);
+		worldMatrix[2] = Multiply(localMatrix[2], worldMatrix[1]);
+
 
 		Matrix4x4 cameraMatrix = MakeAffineMatrix(camera.scale, camera.rotate, camera.translate);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -98,6 +94,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		//Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
+
+
+		Segment segment[2];
+		segment[0].origin = GetWorldPosition(worldMatrix[0]);
+		segment[0].diff = Subtract(GetWorldPosition(worldMatrix[1]), GetWorldPosition(worldMatrix[0]));
+
+		segment[1].origin = GetWorldPosition(worldMatrix[1]);
+		segment[1].diff = Subtract(GetWorldPosition(worldMatrix[2]), GetWorldPosition(worldMatrix[1]));
 
 		///
 		/// ↑更新処理ここまで
@@ -110,11 +114,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// グリッド描画
 		DrawGrid(viewProjectionMatrix, viewportMatrix);
 
-		DrawBezier(controlPoint[0], controlPoint[1], controlPoint[2], viewProjectionMatrix, viewportMatrix, bezierColor);
+		DrawSegment(segment[0], viewProjectionMatrix, viewportMatrix, WHITE);
+		DrawSegment(segment[1], viewProjectionMatrix, viewportMatrix, WHITE);
 
-		DrawSphere(sphere[0], viewProjectionMatrix, viewportMatrix, BLACK);
-		DrawSphere(sphere[1], viewProjectionMatrix, viewportMatrix, BLACK);
-		DrawSphere(sphere[2], viewProjectionMatrix, viewportMatrix, BLACK);
+		DrawSphere(sphere[0], Multiply(worldMatrix[0],viewProjectionMatrix), viewportMatrix, sphere_color[0]);
+		DrawSphere(sphere[1], Multiply(worldMatrix[1], viewProjectionMatrix), viewportMatrix, sphere_color[1]);
+		DrawSphere(sphere[2], Multiply(worldMatrix[2], viewProjectionMatrix), viewportMatrix, sphere_color[2]);
 
 
 		ImGui::Begin("camera");
@@ -125,20 +130,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat("rotateSpeed", &camera.rotateSpeed, 0.01f);
 		ImGui::End();
 
-		ImGui::Begin("point");
-
-		ImGui::DragFloat3("point0", &controlPoint[0].x, 0.01f);
-		ImGui::DragFloat3("point1", &controlPoint[1].x, 0.01f);
-		ImGui::DragFloat3("point2", &controlPoint[2].x, 0.01f);
-
-		ImGui::End();
-
 
 		ImGui::Begin("sphere");
 
-		ImGui::DragFloat3("sphere0", &sphere[0].center.x, 0.01f);
-		ImGui::DragFloat3("sphere1", &sphere[1].center.x, 0.01f);
-		ImGui::DragFloat3("sphere2", &sphere[2].center.x, 0.01f);
+		ImGui::DragFloat3("translates[0]", &translates[0].x, 0.01f);
+		ImGui::DragFloat3("rotates[0]", &rotates[0].x, 0.01f);
+		ImGui::DragFloat3("scales[0]", &scales[0].x, 0.01f);
+
+		ImGui::DragFloat3("translates[1]", &translates[1].x, 0.01f);
+		ImGui::DragFloat3("rotates[1]", &rotates[1].x, 0.01f);
+		ImGui::DragFloat3("scales[1]", &scales[1].x, 0.01f);
+		
+		ImGui::DragFloat3("translates[2]", &translates[2].x, 0.01f);
+		ImGui::DragFloat3("rotates[2]", &rotates[2].x, 0.01f);
+		ImGui::DragFloat3("scales[2]", &scales[2].x, 0.01f);
+
 
 		ImGui::End();
 
