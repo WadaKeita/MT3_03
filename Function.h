@@ -88,9 +88,13 @@ Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t);
 Vector2 Add(const Vector2& v1, const Vector2& v2);
 Vector3 Add(const Vector3& v1, const Vector3& v2);
 
+Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2);
+
 // 減算
 Vector2 Subtract(const Vector2& v1, const Vector2& v2);
 Vector3 Subtract(const Vector3& v1, const Vector3& v2);
+
+Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2);
 
 // スカラー倍
 Vector2 Multiply(float scalar, const Vector2& v);
@@ -170,6 +174,11 @@ Vector3 operator/(const Vector3& v, float s);
 Vector3 operator+(const Vector3& v);
 Vector3 operator-(const Vector3& v);
 
+// Matrix4x4
+// 二項演算子
+//Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2);
+//Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2);
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);
 
 /// <summary>
 /// グリッド描画

@@ -68,6 +68,18 @@ Vector3 Add(const Vector3& v1, const Vector3& v2) {
 	result.z = v1.z + v2.z;
 
 	return result;
+}
+
+Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result;
+
+	for (int column = 0; column < 4; column++) {
+		for (int row = 0; row < 4; row++) {
+			result.m[column][row] = m1.m[column][row] + m2.m[column][row];
+		}
+	}
+
+	return result;
 };
 
 // 減算
@@ -85,6 +97,18 @@ Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 	result.x = v1.x - v2.x;
 	result.y = v1.y - v2.y;
 	result.z = v1.z - v2.z;
+
+	return result;
+};
+
+Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result;
+
+	for (int column = 0; column < 4; column++) {
+		for (int row = 0; row < 4; row++) {
+			result.m[column][row] = m1.m[column][row] - m2.m[column][row];
+		}
+	}
 
 	return result;
 };
@@ -425,6 +449,12 @@ Vector3 operator/(const Vector3& v, float s) { return Multiply(1.0f / s, v); }
 // 単項演算子
 Vector3 operator+(const Vector3& v) { return v; }
 Vector3 operator-(const Vector3& v) { return { -v.x,-v.y,-v.z }; }
+
+// Matrix4x4
+// 二項演算子
+//Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2) { return Add(m1, m2); }
+//Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2) { return Subtract(m1, m2); }
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) { return Multiply(m1, m2); }
 
 
 /// -^-^- 描画 -^-^- ///
